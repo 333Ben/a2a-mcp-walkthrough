@@ -1,9 +1,17 @@
 # A2A where it earns it. MCP everywhere else.
 
-An interactive walkthrough of **eight exchanges** in a multi-agent system, showing the
-protocol each one actually needs — and the two places where only A2A will do.
+I build **Blossom**, a system that reads the documents involved in a French flat sale:
+several agents extract them, cross-check them against each other, and flag what is
+missing or contradictory. Today they coordinate through a shared database.
 
-**→ [Open the walkthrough](https://333ben.github.io/a2a-mcp-walkthrough/)**
+Deciding whether to adopt A2A, I couldn't answer the question in the abstract. So I went
+through every exchange and asked, one at a time, what that one actually needs. Eight
+exchanges. **Five are plain MCP tool calls. Two need A2A.** One is an email, because
+there's a person at the other end.
+
+This is the walkthrough of that exercise.
+
+**→ [Open it](https://333ben.github.io/a2a-mcp-walkthrough/)**
 
 > 🇫🇷 La page est bilingue et suit la langue du navigateur. Un sélecteur FR/EN est en haut à droite.
 
@@ -14,10 +22,10 @@ protocol each one actually needs — and the two places where only A2A will do.
 Most writing about the Agent2Agent protocol argues for adopting it. This argues for
 **bounding** it.
 
-The system below reads the documents involved in a French flat sale, cross-checks them
-against each other, and flags what is missing or contradictory. It runs on eight
-exchanges. **Five are plain MCP tool calls** — ask, answer, done. **Two need A2A.** One is
-an email, because there is a person at the other end.
+Five agents do the work: **Karl** turns a listing into a draft, **Extract** turns PDFs
+into data, **Coherence** confronts the sources with each other, **Iris** carries the
+questions to the estate agent, and **Arsène** handles the mail in and out. Here is every
+exchange between them, and the protocol each one needs.
 
 | # | Exchange | Protocol | Why this one |
 |---|---|---|---|
