@@ -1,0 +1,1484 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Huit echanges dans un systeme multi-agents, et le protocole de chacun : cinq appels MCP, deux echanges A2A, un email. Ou A2A gagne sa place, et ou il n'apporte rien.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A2A la ou il faut. MCP ailleurs.">
+<meta property="og:description" content="Huit echanges dans un systeme multi-agents, et le protocole de chacun : cinq appels MCP, deux echanges A2A, un email. Ou A2A gagne sa place, et ou il n'apporte rien.">
+<style>
+  /* reset minimal — la feuille de la page suit et prime */
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+
+<title>Blossom — Option C : A2A là où il faut, MCP ailleurs</title>
+
+<style>
+  :root {
+    --ground:#FDFCF3; --surface:#FFFFFF; --surface-2:#F4F6F2;
+    --ink:#24373E; --ink-2:#4B6169; --ink-3:#7C8E94;
+    --line:#DBE3E5; --line-2:#EAEEEC;
+    --accent:#16A398; --accent-deep:#0E7C74; --accent-soft:#DCF1EE;
+    --amber:#B87406; --amber-soft:#FAEBD3;
+    --green:#1D8A58; --green-soft:#DDF0E5; --red:#BE504C;
+    --node-out:#FFFFFF; --card-bg:#24373E; --card-ink:#FDFCF3; --card-ink-2:#93A8AF;
+    --c-key:#3D5962; --c-str:#12736B; --c-num:#9C6209; --c-com:#8A9BA1;
+    --shadow:0 1px 2px rgba(36,55,62,.05), 0 8px 24px -12px rgba(36,55,62,.16);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Cascadia Mono", Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:#111C20; --surface:#17242A; --surface-2:#1D2B31;
+      --ink:#F1EEE2; --ink-2:#A2B2B7; --ink-3:#77898F;
+      --line:#26363B; --line-2:#1E2C31;
+      --accent:#3ECFC2; --accent-deep:#5EDDD1; --accent-soft:#0F3A37;
+      --amber:#E2A34A; --amber-soft:#3A2C13;
+      --green:#4EC78A; --green-soft:#123326; --red:#E5807C;
+      --node-out:#1D2B31; --card-bg:#0A1316; --card-ink:#F1EEE2; --card-ink-2:#7F949B;
+      --c-key:#9CB2B8; --c-str:#5ECFBE; --c-num:#E3B26B; --c-com:#6C7E84;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:#111C20; --surface:#17242A; --surface-2:#1D2B31;
+    --ink:#F1EEE2; --ink-2:#A2B2B7; --ink-3:#77898F;
+    --line:#26363B; --line-2:#1E2C31;
+    --accent:#3ECFC2; --accent-deep:#5EDDD1; --accent-soft:#0F3A37;
+    --amber:#E2A34A; --amber-soft:#3A2C13;
+    --green:#4EC78A; --green-soft:#123326; --red:#E5807C;
+    --node-out:#1D2B31; --card-bg:#0A1316; --card-ink:#F1EEE2; --card-ink-2:#7F949B;
+    --c-key:#9CB2B8; --c-str:#5ECFBE; --c-num:#E3B26B; --c-com:#6C7E84;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  :root[data-theme="light"] {
+    --ground:#FDFCF3; --surface:#FFFFFF; --surface-2:#F4F6F2;
+    --ink:#24373E; --ink-2:#4B6169; --ink-3:#7C8E94;
+    --line:#DBE3E5; --line-2:#EAEEEC;
+    --accent:#16A398; --accent-deep:#0E7C74; --accent-soft:#DCF1EE;
+    --amber:#B87406; --amber-soft:#FAEBD3;
+    --green:#1D8A58; --green-soft:#DDF0E5; --red:#BE504C;
+    --node-out:#FFFFFF; --card-bg:#24373E; --card-ink:#FDFCF3; --card-ink-2:#93A8AF;
+    --c-key:#3D5962; --c-str:#12736B; --c-num:#9C6209; --c-com:#8A9BA1;
+    --shadow:0 1px 2px rgba(36,55,62,.05), 0 8px 24px -12px rgba(36,55,62,.16);
+  }
+
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1240px; margin-inline: auto; padding: 40px 24px 72px;
+          display: flex; flex-direction: column; gap: 32px; }
+
+  /* ---------- header ---------- */
+
+  .masthead { display: flex; flex-direction: column; gap: 14px; }
+  .masthead-top { display: flex; align-items: flex-start; justify-content: space-between;
+                  gap: 20px; flex-wrap: wrap; }
+
+  .eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+             font-family: var(--mono); font-size: .6875rem; letter-spacing: .14em;
+             text-transform: uppercase; color: var(--ink-3); }
+  .eyebrow .sep { width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
+  .eyebrow .opt { color: var(--accent-deep); font-weight: 600; }
+  .chip-sim { font-family: var(--mono); font-size: .625rem; letter-spacing: .1em;
+              padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px;
+              color: var(--ink-3); background: var(--surface-2); }
+
+  .lang { display: flex; border: 1px solid var(--line); border-radius: 8px;
+          overflow: hidden; flex: none; }
+  .lang-btn { font-family: var(--mono); font-size: .6875rem; letter-spacing: .1em;
+              padding: 6px 11px; border: 0; background: var(--surface); color: var(--ink-3);
+              cursor: pointer; transition: background .18s ease, color .18s ease; }
+  .lang-btn + .lang-btn { border-left: 1px solid var(--line); }
+  .lang-btn:hover { color: var(--ink); }
+  .lang-btn[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+  .lang-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  h1 { font-family: var(--mono); font-size: clamp(1.7rem, 3.6vw, 2.45rem); line-height: 1.14;
+       letter-spacing: -.028em; font-weight: 600; text-wrap: balance; max-width: 24ch; margin: 0; }
+  h1 em { font-style: normal; color: var(--accent-deep); }
+
+  .lede { color: var(--ink-2); font-size: 1.0625rem; max-width: 64ch; margin: 0; }
+
+  /* ---------- grid ---------- */
+
+  .stage { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(330px, .82fr);
+           gap: 24px; align-items: start; }
+  .panel { background: var(--surface); border: 1px solid var(--line);
+           border-radius: 14px; box-shadow: var(--shadow); }
+  .col-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  /* ---------- graph ---------- */
+
+  .graph-card { padding: 8px 8px 4px; overflow: hidden; }
+  svg.graph { display: block; width: 100%; height: auto; }
+
+  .boundary { fill: none; stroke: var(--line); stroke-width: 1.25; stroke-dasharray: 3 5; }
+  .boundary-label { font-family: var(--mono); font-size: 11px; letter-spacing: .13em; fill: var(--ink-3); }
+
+  /* protocol = line treatment (static) */
+  .edge { fill: none; stroke: var(--line); transition: stroke .3s ease, stroke-width .3s ease; }
+  .edge.p-mcp  { stroke-width: 1.3; stroke-dasharray: 1.5 3.5; }
+  .edge.p-a2a  { stroke-width: 2.1; stroke: var(--ink-3); }
+  .edge.p-mail { stroke-width: 1.3; stroke-dasharray: 6 4; }
+
+  /* state = colour (live) — must win over the protocol widths above */
+  .edge.lit { stroke: var(--accent); stroke-width: 2.4; }
+  .edge.lit-amber { stroke: var(--amber); stroke-width: 2.4; }
+
+  .node rect.body { fill: var(--node-out); stroke: var(--line); stroke-width: 1.25;
+                    transition: stroke .3s ease, stroke-width .3s ease; }
+  .node .name { font-family: var(--mono); font-size: 13.5px; font-weight: 600;
+                letter-spacing: .04em; fill: var(--ink); }
+  .node .role { font-size: 11.5px; fill: var(--ink-2); }
+  .node .halo { fill: none; stroke: var(--accent); stroke-width: 0; opacity: 0; transition: all .3s ease; }
+  .node .dot { fill: var(--ink-3); transition: fill .3s ease; }
+
+  .node.is-active rect.body, .node.is-working rect.body { stroke: var(--accent); stroke-width: 2; }
+  .node.is-active .halo, .node.is-working .halo { stroke-width: 7; opacity: .16; }
+  .node.is-active .dot, .node.is-working .dot { fill: var(--accent); }
+  .node.is-working .dot { animation: breathe 1.5s ease-in-out infinite; }
+  .node.is-waiting rect.body { stroke: var(--amber); stroke-width: 2; }
+  .node.is-waiting .halo { stroke: var(--amber); stroke-width: 7; opacity: .18; }
+  .node.is-waiting .dot { fill: var(--amber); animation: breathe 1.1s ease-in-out infinite; }
+  .node.is-done .dot { fill: var(--green); }
+
+  @keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* the A2A task at the centre */
+  .dcard { fill: var(--card-bg); stroke: var(--card-bg); stroke-width: 1.25;
+           transition: stroke .3s ease, stroke-width .3s ease; }
+  #n-dossier.is-active .dcard { stroke: var(--accent); stroke-width: 2.5; }
+  .dtitle { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; fill: var(--card-ink-2); }
+  .dtask { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; fill: var(--accent); }
+  .drule { stroke: var(--card-ink-2); stroke-width: .6; opacity: .35; }
+  .dlabel { font-size: 11.5px; fill: var(--card-ink-2); }
+  .dval { font-family: var(--mono); font-size: 12px; fill: var(--card-ink-2); }
+  .drow.is-set .dval { fill: var(--card-ink); }
+  .drow.is-conflict .dval { fill: var(--amber); font-weight: 600; }
+  .drow.is-wait .dval { fill: var(--amber); }
+  .drow.is-ok .dval { fill: var(--green); }
+  .drow.is-lever .dval { fill: var(--accent); font-weight: 600; }
+  .dhl { fill: var(--accent); opacity: 0; }
+  .drow.changed .dhl { animation: flash 1.1s ease-out; }
+  @keyframes flash { 0% { opacity: 0; } 22% { opacity: .3; } 100% { opacity: 0; } }
+
+  .pulse { fill: var(--accent); }
+  .pulse-halo { fill: var(--accent); opacity: .2; }
+  .pulse.amber, .pulse-halo.amber { fill: var(--amber); }
+
+  .skill-tag { font-family: var(--mono); font-size: 10px; letter-spacing: .05em; fill: var(--ink-3); }
+
+  /* ---------- controls ---------- */
+
+  .controls { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .rail { display: flex; gap: 4px; }
+  .seg { flex: 1; height: 26px; padding: 0; border: 0; background: none; cursor: pointer; position: relative; }
+  .seg::after { content: ""; position: absolute; left: 0; right: 0; top: 11px; height: 4px;
+                border-radius: 2px; background: var(--line); transition: background .25s ease; }
+  .seg:hover::after { background: var(--ink-3); }
+  .seg.done::after { background: var(--accent); opacity: .45; }
+  .seg.current::after { background: var(--accent); opacity: 1; }
+  .seg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .transport { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  button.ctl { font-family: var(--mono); font-size: .75rem; letter-spacing: .06em;
+               color: var(--ink); background: var(--surface-2); border: 1px solid var(--line);
+               border-radius: 8px; padding: 7px 12px; cursor: pointer;
+               transition: background .18s ease, border-color .18s ease, color .18s ease; }
+  button.ctl:hover { border-color: var(--ink-3); }
+  button.ctl:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.ctl:disabled { opacity: .38; cursor: default; }
+  button.ctl:disabled:hover { border-color: var(--line); }
+  button.ctl.play { background: var(--ink); color: var(--ground); border-color: var(--ink); min-width: 108px; }
+  .counter { margin-left: auto; font-family: var(--mono); font-size: .75rem; color: var(--ink-3);
+             font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+
+  /* ---------- inspector ---------- */
+
+  .inspector { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  @media (min-width: 981px) { .inspector { position: sticky; top: 24px; } }
+
+  .insp-head { display: flex; flex-direction: column; gap: 8px; }
+  .phase { font-family: var(--mono); font-size: .6875rem; letter-spacing: .15em;
+           text-transform: uppercase; color: var(--accent-deep);
+           display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .phase .num { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .phase .when { color: var(--amber); border: 1px solid var(--amber); border-radius: 999px;
+                 padding: 1px 7px; font-size: .5625rem; letter-spacing: .1em; }
+  .insp-title { font-family: var(--mono); font-size: 1.185rem; font-weight: 600;
+                letter-spacing: -.015em; line-height: 1.28; text-wrap: balance; margin: 0; }
+
+  .proto { display: flex; flex-direction: column; gap: 7px;
+           background: var(--surface-2); border: 1px solid var(--line-2);
+           border-radius: 9px; padding: 11px 13px; }
+  .pbadges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pbadge { font-family: var(--mono); font-size: .5625rem; letter-spacing: .13em;
+            text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
+            border: 1px solid var(--line); color: var(--ink-2); background: var(--surface); }
+  .pbadge.a2a { color: var(--accent-deep); border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .pbadge.mail { color: var(--ink-3); }
+  .proto-why { font-size: .8125rem; color: var(--ink-2); margin: 0; }
+  .proto-why b { color: var(--ink); font-weight: 600; }
+
+  .gloss { color: var(--ink-2); font-size: .9375rem; margin: 0; }
+  .gloss b { color: var(--ink); font-weight: 600; }
+
+  .wire { display: flex; flex-direction: column; gap: 10px; }
+  .frame { display: flex; flex-direction: column; gap: 5px; }
+  .frame-label { font-family: var(--mono); font-size: .6875rem; letter-spacing: .05em;
+                 color: var(--ink-3); display: flex; align-items: center; gap: 7px; }
+  .frame-label .arrow { color: var(--accent); font-size: .8125rem; }
+  .frame.in .frame-label .arrow { color: var(--ink-3); }
+  .frame.alert .frame-label .arrow { color: var(--amber); }
+  .frame.mail .frame-label .arrow { color: var(--ink-2); }
+
+  pre.code { margin: 0; background: var(--surface-2); border: 1px solid var(--line-2);
+             border-radius: 9px; padding: 11px 13px; overflow-x: auto;
+             max-height: 200px; overflow-y: auto; font-family: var(--mono);
+             font-size: .75rem; line-height: 1.62; color: var(--ink-2); tab-size: 2; }
+  .tk-key { color: var(--c-key); font-weight: 600; }
+  .tk-str { color: var(--c-str); }
+  .tk-num { color: var(--c-num); }
+  .tk-com { color: var(--c-com); font-style: italic; }
+
+  .result { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .result-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+                padding: 12px 14px; background: var(--green-soft); border-bottom: 1px solid var(--line); }
+  .result-top strong { font-family: var(--mono); font-size: .875rem; color: var(--green); letter-spacing: .02em; }
+  .result-top span { font-size: .8125rem; color: var(--ink-2); }
+  .alert-row { display: flex; gap: 11px; padding: 11px 14px; border-top: 1px solid var(--line-2); }
+  .alert-row:first-of-type { border-top: 0; }
+  .sev { width: 3px; border-radius: 2px; flex: none; background: var(--amber); }
+  .sev.ok { background: var(--green); }
+  .sev.lever { background: var(--accent); }
+  .alert-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .alert-body .tag { font-family: var(--mono); font-size: .5625rem; letter-spacing: .12em;
+                     color: var(--ink-3); text-transform: uppercase; }
+  .alert-body b { font-size: .875rem; font-weight: 600; line-height: 1.45; }
+  .alert-body small { font-family: var(--mono); font-size: .6875rem; color: var(--ink-3); }
+
+  .note { border-top: 1px solid var(--line-2); padding-top: 14px; font-size: .875rem; color: var(--ink-2); }
+  .note b { color: var(--ink); font-weight: 600; }
+  .note code { font-family: var(--mono); font-size: .8125rem; background: var(--surface-2);
+               border: 1px solid var(--line-2); border-radius: 4px; padding: 1px 5px; }
+
+  .legends { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+  .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+            font-family: var(--mono); font-size: .6875rem; letter-spacing: .04em; color: var(--ink-3); }
+  .legend > span { display: flex; align-items: center; gap: 7px; }
+  .lgroup { text-transform: uppercase; letter-spacing: .14em; font-size: .5625rem;
+            color: var(--ink-3); opacity: .75; min-width: 74px; }
+  .swatch { width: 18px; height: 0; border-top: 1.5px solid var(--line); }
+  .swatch.a2a { border-top: 2.2px solid var(--ink-2); }
+  .swatch.mcp { border-top: 1.5px dotted var(--ink-3); }
+  .swatch.mail { border-top: 1.5px dashed var(--ink-3); }
+  .swatch.box { border-top: 1.25px dashed var(--line); }
+  .swatch.accent { border-top-color: var(--accent); border-top-width: 2.5px; }
+  .swatch.amber { border-top-color: var(--amber); border-top-width: 2.5px; }
+
+  .colophon { border-top: 1px solid var(--line); padding-top: 18px; font-size: .8125rem;
+              color: var(--ink-3); max-width: 78ch; margin: 0; }
+
+  @media (max-width: 980px) {
+    .stage { grid-template-columns: 1fr; }
+    .inspector { position: static; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 28px 16px 56px; gap: 24px; }
+    .counter { margin-left: 0; width: 100%; }
+    .lgroup { min-width: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="masthead-top">
+      <div class="eyebrow">
+        <span class="opt" data-i18n="option">Option C · le bon protocole au bon endroit</span><i class="sep"></i>
+        <span data-i18n="eyebrow2">Blossom · conformité Loi Alur</span>
+        <span class="chip-sim" data-i18n="chip">Démo — scénario simulé</span>
+      </div>
+      <div class="lang" role="group" aria-label="Langue / Language">
+        <button class="lang-btn" type="button" data-lang="fr" aria-pressed="true">FR</button>
+        <button class="lang-btn" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+    <h1 data-i18n-html="h1">A2A là où il faut. <em>MCP ailleurs.</em></h1>
+    <p class="lede" data-i18n="lede"></p>
+  </header>
+
+  <div class="stage">
+
+    <div class="col-left">
+      <div class="panel graph-card">
+        <svg class="graph" viewBox="0 0 880 640" role="img" aria-labelledby="graph-title">
+          <title id="graph-title" data-i18n="graphAlt">Boucle de coordination entre les agents Blossom, avec le protocole de chaque échange</title>
+
+          <rect class="boundary" x="30" y="20" width="820" height="460" rx="18"></rect>
+          <text class="boundary-label" x="48" y="46" data-i18n="boundary">BLOSSOM — FRONTIÈRE DE CONFIANCE</text>
+
+          <path id="e-karl-dossier"      class="edge p-mcp"  d="M 130 101 C 130 155, 220 175, 393 179"></path>
+          <path id="e-extract-dossier"   class="edge p-mcp"  d="M 490 101 V 166"></path>
+          <path id="e-dossier-coherence" class="edge p-mcp"  d="M 585 240 C 615 240, 620 250, 648 250"></path>
+          <path id="e-coherence-iris"    class="edge p-mcp"  d="M 740 278 C 740 370, 665 428, 582 428"></path>
+          <path id="e-iris-human"        class="edge p-a2a"  d="M 490 456 V 528"></path>
+          <path id="e-iris-arsene"       class="edge p-a2a"  d="M 400 428 C 330 428, 250 372, 242 280"></path>
+          <path id="e-arsene-syndic"     class="edge p-mail" d="M 150 258 C 85 275, 65 430, 140 528"></path>
+          <path id="e-arsene-extract"    class="edge p-mcp"  d="M 240 220 C 240 140, 320 73, 398 73"></path>
+
+          <text class="skill-tag" x="252" y="140" data-i18n="tagLoop">retour dans le pipeline</text>
+          <text class="skill-tag" x="600" y="200" data-i18n="tagCheck">confrontation</text>
+          <text class="skill-tag" x="502" y="498" data-i18n="tagAsk">arbitrage</text>
+          <text class="skill-tag" x="52" y="400" data-i18n="tagMail">email</text>
+
+          <g class="node" id="n-karl" data-node="karl">
+            <rect class="halo" x="45" y="45" width="170" height="56" rx="11"></rect>
+            <rect class="body" x="45" y="45" width="170" height="56" rx="11"></rect>
+            <text class="name" x="62" y="72">KARL</text>
+            <text class="role" x="62" y="90" data-i18n="rKarl">l'annonce → la fiche</text>
+            <circle class="dot" cx="198" cy="63" r="3.5"></circle>
+          </g>
+
+          <g class="node" id="n-extract" data-node="extract">
+            <rect class="halo" x="400" y="45" width="180" height="56" rx="11"></rect>
+            <rect class="body" x="400" y="45" width="180" height="56" rx="11"></rect>
+            <text class="name" x="417" y="72">EXTRACT</text>
+            <text class="role" x="417" y="90" data-i18n="rExtract">les PDF → des données</text>
+            <circle class="dot" cx="563" cy="63" r="3.5"></circle>
+          </g>
+
+          <g class="node" id="n-coherence" data-node="coherence">
+            <rect class="halo" x="650" y="222" width="180" height="56" rx="11"></rect>
+            <rect class="body" x="650" y="222" width="180" height="56" rx="11"></rect>
+            <text class="name" x="667" y="249" data-i18n="nCoherence">COHÉRENCE</text>
+            <text class="role" x="667" y="267" data-i18n="rCoherence">confronte les sources</text>
+            <circle class="dot" cx="813" cy="240" r="3.5"></circle>
+          </g>
+
+          <g class="node" id="n-iris" data-node="iris">
+            <rect class="halo" x="400" y="400" width="180" height="56" rx="11"></rect>
+            <rect class="body" x="400" y="400" width="180" height="56" rx="11"></rect>
+            <text class="name" x="417" y="427">IRIS</text>
+            <text class="role" x="417" y="445" data-i18n="rIris">le seul agent qui attend</text>
+            <circle class="dot" cx="563" cy="418" r="3.5"></circle>
+          </g>
+
+          <g class="node" id="n-arsene" data-node="arsene">
+            <rect class="halo" x="150" y="222" width="180" height="56" rx="11"></rect>
+            <rect class="body" x="150" y="222" width="180" height="56" rx="11"></rect>
+            <text class="name" x="167" y="249">ARSÈNE</text>
+            <text class="role" x="167" y="267" data-i18n="rArsene">le courrier, entrant et sortant</text>
+            <circle class="dot" cx="313" cy="240" r="3.5"></circle>
+          </g>
+
+          <g class="node" id="n-human" data-node="human">
+            <rect class="halo" x="390" y="530" width="200" height="58" rx="11"></rect>
+            <rect class="body" x="390" y="530" width="200" height="58" rx="11"></rect>
+            <text class="name" x="407" y="557" data-i18n="nHuman">AGENT IMMOBILIER</text>
+            <text class="role" x="407" y="575" data-i18n="rHuman">l'arbitre — jamais l'IA</text>
+            <circle class="dot" cx="573" cy="548" r="3.5"></circle>
+          </g>
+
+          <g class="node" id="n-syndic" data-node="syndic">
+            <rect class="halo" x="60" y="530" width="210" height="58" rx="11"></rect>
+            <rect class="body" x="60" y="530" width="210" height="58" rx="11"></rect>
+            <text class="name" x="77" y="557" data-i18n="nSyndic">SYNDIC</text>
+            <text class="role" x="77" y="575" data-i18n="rSyndic">détient le document manquant</text>
+            <circle class="dot" cx="253" cy="548" r="3.5"></circle>
+          </g>
+
+          <g id="n-dossier" data-node="dossier">
+            <rect class="dcard" x="395" y="168" width="190" height="148" rx="11"></rect>
+            <text class="dtitle" x="411" y="189" data-i18n="dTitle">DOSSIER · LOT 4B</text>
+            <text class="dtask" x="411" y="203" data-i18n="dTask">TÂCHE A2A · task-9d02</text>
+            <line class="drule" x1="411" y1="211" x2="569" y2="211"></line>
+
+            <g class="drow" id="d-surface">
+              <rect class="dhl" x="405" y="217" width="170" height="19" rx="4"></rect>
+              <text class="dlabel" x="411" y="231" data-i18n="dSurface">Surface</text>
+              <text class="dval" x="569" y="231" text-anchor="end">—</text>
+            </g>
+            <g class="drow" id="d-pv">
+              <rect class="dhl" x="405" y="239" width="170" height="19" rx="4"></rect>
+              <text class="dlabel" x="411" y="253" data-i18n="dPv">PV d'AG 2023</text>
+              <text class="dval" x="569" y="253" text-anchor="end">—</text>
+            </g>
+            <g class="drow" id="d-lever">
+              <rect class="dhl" x="405" y="261" width="170" height="19" rx="4"></rect>
+              <text class="dlabel" x="411" y="275" data-i18n="dLever">Ravalement</text>
+              <text class="dval" x="569" y="275" text-anchor="end">—</text>
+            </g>
+            <g class="drow" id="d-status">
+              <rect class="dhl" x="405" y="283" width="170" height="19" rx="4"></rect>
+              <text class="dlabel" x="411" y="297" data-i18n="dStatus">Statut</text>
+              <text class="dval" x="569" y="297" text-anchor="end">—</text>
+            </g>
+          </g>
+
+          <g id="pulse-layer"></g>
+        </svg>
+      </div>
+
+      <div class="panel controls">
+        <div class="rail" id="rail" role="tablist"></div>
+        <div class="transport">
+          <button class="ctl play" id="btn-play"></button>
+          <button class="ctl" id="btn-prev">◀</button>
+          <button class="ctl" id="btn-next">▶</button>
+          <button class="ctl" id="btn-reset"></button>
+          <span class="counter" id="counter">01 / 08</span>
+        </div>
+      </div>
+
+      <div class="legends">
+        <div class="legend">
+          <span class="lgroup" data-i18n="lgProto">Protocole</span>
+          <span><i class="swatch a2a"></i><span data-i18n="lgA2a">A2A — la tâche qui attend</span></span>
+          <span><i class="swatch mcp"></i><span data-i18n="lgMcp">MCP — l'appel qui répond tout de suite</span></span>
+          <span><i class="swatch mail"></i><span data-i18n="lgMail">email — un humain au bout</span></span>
+        </div>
+        <div class="legend">
+          <span class="lgroup" data-i18n="lgState">État</span>
+          <span><i class="swatch accent"></i><span data-i18n="lg2">message en vol</span></span>
+          <span><i class="swatch amber"></i><span data-i18n="lg3">en attente d'un humain</span></span>
+          <span><i class="swatch box"></i><span data-i18n="lg1">périmètre Blossom</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel inspector">
+      <div class="insp-head">
+        <div class="phase">
+          <span class="num" id="i-num">01</span><span id="i-phase"></span>
+          <span class="when" id="i-when" hidden></span>
+        </div>
+        <h2 class="insp-title" id="i-title">—</h2>
+      </div>
+      <div class="proto">
+        <div class="pbadges" id="i-badges"></div>
+        <p class="proto-why" id="i-why"></p>
+      </div>
+      <p class="gloss" id="i-gloss">—</p>
+      <div class="wire" id="i-wire"></div>
+      <div id="i-extra"></div>
+    </div>
+
+  </div>
+
+  <p class="colophon" data-i18n="colophon"></p>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  function L(fr, en) { return { fr: fr, en: en }; }
+
+  /* ================= interface ================= */
+
+  const UI = {
+    option: L("Option C · le bon protocole au bon endroit", "Option C · the right protocol in the right place"),
+    eyebrow2: L("Blossom · conformité Loi Alur", "Blossom · Loi Alur compliance (France)"),
+    chip: L("Démo — scénario simulé", "Demo — simulated scenario"),
+    h1: L("A2A là où il faut. <em>MCP ailleurs.</em>", "A2A where it earns it. <em>MCP everywhere else.</em>"),
+    lede: L("Dans un système d'agents, tout n'a pas besoin du même protocole. Cinq de ces huit échanges sont de simples appels d'outil : on demande, ça répond, c'est fini — MCP suffit. Deux seulement exigent A2A : ceux où la réponse attend un humain, ou met trois jours à venir. Et la tâche A2A, au centre, survit à tous les autres.",
+            "In a system of agents, not everything needs the same protocol. Five of these eight exchanges are plain tool calls: you ask, it answers, done — MCP is enough. Only two require A2A: the ones where the answer waits on a human, or takes three days to arrive. And the A2A task, at the centre, outlives all the rest."),
+    graphAlt: L("Boucle de coordination entre les agents Blossom, avec le protocole de chaque échange",
+                "Coordination loop between Blossom's agents, showing the protocol of each exchange"),
+    boundary: L("BLOSSOM — FRONTIÈRE DE CONFIANCE", "BLOSSOM — TRUST BOUNDARY"),
+    tagLoop: L("retour dans le pipeline", "back into the pipeline"),
+    tagCheck: L("confrontation", "cross-check"),
+    tagAsk: L("arbitrage", "arbitration"),
+    tagMail: L("email", "email"),
+    rKarl: L("l'annonce → la fiche", "listing → draft file"),
+    rExtract: L("les PDF → des données", "PDFs → data"),
+    nCoherence: L("COHÉRENCE", "COHERENCE"),
+    rCoherence: L("confronte les sources", "cross-checks the sources"),
+    rIris: L("le seul agent qui attend", "the only agent that waits"),
+    rArsene: L("le courrier, entrant et sortant", "the mail, inbound and outbound"),
+    nHuman: L("AGENT IMMOBILIER", "ESTATE AGENT"),
+    rHuman: L("l'arbitre — jamais l'IA", "the arbiter — never the AI"),
+    nSyndic: L("SYNDIC", "MANAGING AGENT"),
+    rSyndic: L("détient le document manquant", "holds the missing document"),
+    dTitle: L("DOSSIER · LOT 4B", "FILE · UNIT 4B"),
+    dTask: L("TÂCHE A2A · task-9d02", "A2A TASK · task-9d02"),
+    dSurface: L("Surface", "Floor area"),
+    dPv: L("PV d'AG 2023", "2023 AGM minutes"),
+    dLever: L("Ravalement", "Facade works"),
+    dStatus: L("Statut", "Status"),
+    lgProto: L("Protocole", "Protocol"),
+    lgState: L("État", "State"),
+    lgA2a: L("A2A — la tâche qui attend", "A2A — the task that waits"),
+    lgMcp: L("MCP — l'appel qui répond tout de suite", "MCP — the call that answers at once"),
+    lgMail: L("email — un humain au bout", "email — a person at the other end"),
+    lg1: L("périmètre Blossom", "Blossom's perimeter"),
+    lg2: L("message en vol", "message in flight"),
+    lg3: L("en attente d'un humain", "waiting on a human"),
+    play: L("▶ Lecture", "▶ Play"),
+    pause: L("❚❚ Pause", "❚❚ Pause"),
+    reset: L("↻ Reprendre", "↻ Restart"),
+    prevAria: L("Étape précédente", "Previous step"),
+    nextAria: L("Étape suivante", "Next step"),
+    playAria: L("Lecture ou pause", "Play or pause"),
+    resetAria: L("Revenir au début", "Back to the start"),
+    railAria: L("Étapes de la démonstration", "Steps of the walkthrough"),
+    stepAria: L("Étape", "Step"),
+    colophon: L("Démonstration illustrative sur un dossier fictif. Le trait de chaque flèche indique son protocole ; la couleur indique seulement ce qui se passe à l'instant. Aujourd'hui ces agents se coordonnent par une base Supabase partagée : cette page montre à quoi ressemblerait la même chorégraphie répartie entre MCP et A2A. Les agents, leurs rôles et les règles d'arbitrage correspondent à ceux de Blossom.",
+                "Illustrative walkthrough on a fictional file. The stroke of each arrow shows its protocol; colour only shows what is happening right now. Today these agents coordinate through a shared Supabase database: this page shows what the same choreography would look like split between MCP and A2A. The agents, their roles and the arbitration rules match Blossom's. Loi Alur is the French statute requiring a seller to hand over a defined set of co-ownership documents before a flat can be sold.")
+  };
+
+  const PROTO_LABEL = { mcp: "MCP", a2a: "A2A", mail: L("Email", "Email") };
+
+  /* ================= the loop ================= */
+
+  const STEPS = [
+    {
+      phase: L("Amorce · Karl", "Seed · Karl"),
+      title: L("Karl pose la première version du dossier", "Karl lays down the first draft"),
+      proto: {
+        kinds: ["mcp"],
+        why: L("Trois secondes, une réponse, rien à attendre. Karl est un <b>outil</b>, pas un agent : il n'a ni objectif ni mémoire. A2A ici n'apporterait que de la plomberie.",
+               "Three seconds, one answer, nothing to wait for. Karl is a <b>tool</b>, not an agent: no goal, no memory. A2A here would add plumbing and nothing else.")
+      },
+      gloss: L("L'agent colle le texte de son annonce. Karl en tire une fiche complète. <b>C'est un point de départ, pas une vérité</b> — l'annonce est la source la moins fiable du dossier.",
+               "The estate agent pastes in the listing text. Karl turns it into a complete draft. <b>It is a starting point, not a truth</b> — the listing is the least reliable source in the file."),
+      hops: [{ from: "karl", to: "dossier" }],
+      nodes: { karl: "active", dossier: "active" },
+      dossier: {
+        surface: { v: L("71,0 m² · annonce", "71.0 m² · listing"), s: "is-set" },
+        pv: { v: "—", s: "" },
+        lever: { v: "—", s: "" },
+        status: { v: L("fiche créée", "draft created"), s: "is-set" }
+      },
+      changed: ["surface", "status"],
+      wire: [
+        {
+          dir: "out",
+          label: L("blossom → karl · appel d'outil", "blossom → karl · tool call"),
+          code: L(
+`{
+  "method": "tools/call",
+  "params": {
+    "name": "extraction_annonce",
+    "arguments": { "text": "Appartement 3 pieces, 71 m2, 3e etage,
+                            chauffage collectif, 12 rue Marcadet..." }
+  }
+}`,
+`{
+  "method": "tools/call",
+  "params": {
+    "name": "extraction_annonce",
+    "arguments": { "text": "3-room flat, 71 sqm, 3rd floor,
+                            communal heating, 12 rue Marcadet..." }
+  }
+}`)
+        },
+        {
+          dir: "in",
+          label: L("karl → blossom · résultat", "karl → blossom · result"),
+          code: L(
+`{
+  "content": [{ "type": "text", "text": "..." }],
+  "structuredContent": {
+    "address": "12 rue Marcadet, 75018 Paris",
+    "surface_m2": 71.0, "floor": 3, "rooms": 3,
+    "heating": "collectif",
+    "source": "annonce"   // declaratif : la source la moins fiable
+  }
+}`,
+`{
+  "content": [{ "type": "text", "text": "..." }],
+  "structuredContent": {
+    "address": "12 rue Marcadet, 75018 Paris",
+    "surface_m2": 71.0, "floor": 3, "rooms": 3,
+    "heating": "collectif",
+    "source": "annonce"   // declarative: the least reliable source
+  }
+}`)
+        }
+      ]
+    },
+
+    {
+      phase: L("Entrée · Extract", "Intake · Extract"),
+      title: L("Les documents entrent dans le dossier", "The documents enter the file"),
+      proto: {
+        kinds: ["mcp"],
+        why: L("Un appel <b>long</b>, mais qui rend la main. Extract peut envoyer son avancement en cours de route — MCP sait faire ça. Ce qu'il ne sait pas faire, c'est s'arrêter pour poser une question.",
+               "A <b>long</b> call, but one that comes back. Extract can report progress along the way — MCP handles that. What it cannot do is stop and ask a question.")
+      },
+      gloss: L("Douze PDF sont déposés. Extract les lit — PyMuPDF quand le texte est là, OCR quand ce sont des scans — puis chaque document part vers l'analyseur de son type.",
+               "Twelve PDFs are dropped in. Extract reads them — PyMuPDF when there is a text layer, OCR when they are scans — then each document goes to the analyser for its type."),
+      hops: [{ from: "extract", to: "dossier" }],
+      nodes: { extract: "working", dossier: "active" },
+      dossier: {
+        surface: { v: L("71,0 m² · annonce", "71.0 m² · listing"), s: "is-set" },
+        pv: { v: L("absent", "missing"), s: "" },
+        lever: { v: "—", s: "" },
+        status: { v: L("9 documents analysés", "9 documents analysed"), s: "is-set" }
+      },
+      changed: ["pv", "status"],
+      wire: [
+        {
+          dir: "out",
+          label: L("blossom → extract · appel d'outil", "blossom → extract · tool call"),
+          code: L(
+`{
+  "method": "tools/call",
+  "params": {
+    "name": "extraction_documents",
+    "arguments": { "files": ["diag-carrez.pdf",
+                             "releve-charges-2024.pdf"] }
+    // + 10 autres fichiers
+  }
+}`,
+`{
+  "method": "tools/call",
+  "params": {
+    "name": "extraction_documents",
+    "arguments": { "files": ["diag-carrez.pdf",
+                             "releve-charges-2024.pdf"] }
+    // + 10 more files
+  }
+}`)
+        },
+        {
+          dir: "in",
+          label: L("extract → blossom · avancement puis résultat", "extract → blossom · progress, then result"),
+          code: L(
+`{ "method": "notifications/progress",
+  "params": { "progress": 9, "total": 12,
+              "message": "PyMuPDF - couche texte" } }
+
+{ "method": "notifications/progress",
+  "params": { "progress": 12, "total": 12,
+              "message": "OCR Mistral - 3 scans" } }
+
+{ "structuredContent": {
+    "classified": 9, "duplicates": 3,
+    "carrez": { "surface_m2": 68.4 },
+    "charges_2024": { "ravalement": "vote en AG, montant non repris" }
+  }}`,
+`{ "method": "notifications/progress",
+  "params": { "progress": 9, "total": 12,
+              "message": "PyMuPDF - text layer" } }
+
+{ "method": "notifications/progress",
+  "params": { "progress": 12, "total": 12,
+              "message": "Mistral OCR - 3 scans" } }
+
+{ "structuredContent": {
+    "classified": 9, "duplicates": 3,
+    "carrez": { "surface_m2": 68.4 },
+    "charges_2024": { "ravalement": "voted at AGM, amount not restated" }
+  }}`)
+        }
+      ]
+    },
+
+    {
+      phase: L("Confrontation", "Cross-check"),
+      title: L("Le dossier se contredit", "The file contradicts itself"),
+      proto: {
+        kinds: ["mcp"],
+        why: L("Une confrontation de données : pas d'interlocuteur, pas d'attente, pas de décision. <b>C'est le dernier appel MCP avant que le système bute sur quelque chose qu'il ne peut pas résoudre seul.</b>",
+               "A data cross-check: no counterpart, no waiting, no decision. <b>This is the last MCP call before the system hits something it cannot resolve on its own.</b>")
+      },
+      gloss: L("Chaque nouveau document challenge ce qui était déjà là. Le Carrez dit 68,4 m², l'annonce disait 71. Et les charges 2024 parlent d'un ravalement voté dont le montant n'apparaît nulle part.",
+               "Every new document challenges what was already there. The Carrez survey says 68.4 m², the listing said 71. And the 2024 charges mention voted facade works whose amount appears nowhere."),
+      hops: [{ from: "dossier", to: "coherence" }],
+      nodes: { coherence: "working", dossier: "active" },
+      dossier: {
+        surface: { v: L("71,0 ⇄ 68,4 m²", "71.0 ⇄ 68.4 m²"), s: "is-conflict" },
+        pv: { v: L("absent · requis", "missing · required"), s: "is-conflict" },
+        lever: { v: L("voté, montant inconnu", "voted, amount unknown"), s: "is-conflict" },
+        status: { v: L("2 points à résoudre", "2 points to resolve"), s: "is-conflict" }
+      },
+      changed: ["surface", "pv", "lever", "status"],
+      tone: "amber",
+      wire: [
+        {
+          dir: "alert",
+          label: L("cohérence → blossom · résultat", "coherence → blossom · result"),
+          code: L(
+`{
+  "structuredContent": {
+
+    "conflicts": [
+      { "field": "surface_m2",
+        "values": { "annonce": 71.0, "carrez": 68.4 },
+        "authority": "carrez",     // le Carrez fait foi des qu'il est la
+        "resolution": "human" }    // mais l'arbitre reste l'agent
+    ],
+
+    "missing": [
+      { "document": "pv_ag_2023",
+        "why": "ravalement vote cite dans releve-charges-2024.pdf",
+        "holder_contact": {          // extrait de l'en-tete du releve
+          "role": "syndic", "name": "Cabinet Durand",
+          "source": "releve-charges-2024.pdf p.1" } }
+    ]
+  }
+}`,
+`{
+  "structuredContent": {
+
+    "conflicts": [
+      { "field": "surface_m2",
+        "values": { "annonce": 71.0, "carrez": 68.4 },
+        "authority": "carrez",     // Carrez prevails once present
+        "resolution": "human" }    // but the agent stays the arbiter
+    ],
+
+    "missing": [
+      { "document": "pv_ag_2023",
+        "why": "facade works voted, cited in releve-charges-2024.pdf",
+        "holder_contact": {          // pulled from the statement header
+          "role": "syndic", "name": "Cabinet Durand",
+          "source": "releve-charges-2024.pdf p.1" } }
+    ]
+  }
+}`)
+        }
+      ],
+      note: L("<b>Le contact du syndic sort du document lui-même.</b> Chaque analyse de Blossom porte un champ <code>contact</code> : l'auteur est extrait en même temps que le contenu. C'est ce qui rend la suite possible sans qu'on ait jamais saisi d'annuaire.",
+              "<b>The managing agent's contact comes out of the document itself.</b> Every Blossom analysis carries a <code>contact</code> field: the author is extracted along with the content. That is what makes the rest possible without anyone keying in a directory.")
+    },
+
+    {
+      phase: L("Arbitrage", "Arbitration"),
+      title: L("Iris ne tranche pas — elle demande", "Iris does not decide — it asks"),
+      proto: {
+        kinds: ["a2a"],
+        why: L("<b>Ici MCP casse.</b> Un outil répond ou échoue ; il ne sait pas dire « je m'arrête, j'ai besoin de toi, reviens me voir ». La tâche A2A passe en <code>input-required</code> et <b>reste vivante</b> pendant que l'humain réfléchit.",
+               "<b>This is where MCP breaks.</b> A tool answers or fails; it cannot say \"I'm stopping, I need you, come back to me\". The A2A task moves to <code>input-required</code> and <b>stays alive</b> while the human thinks.")
+      },
+      gloss: L("Iris rassemble les deux points et les porte à l'agent immobilier. Une seule question, deux décisions à prendre. Aucun agent n'a le droit de choisir la source de vérité à sa place.",
+               "Iris gathers both points and takes them to the estate agent. One question, two decisions. No agent may pick the source of truth on their behalf."),
+      hops: [{ from: "coherence", to: "iris" }, { from: "iris", to: "human" }],
+      nodes: { coherence: "done", iris: "waiting", human: "waiting", dossier: "active" },
+      dossier: {
+        surface: { v: L("71,0 ⇄ 68,4 m²", "71.0 ⇄ 68.4 m²"), s: "is-conflict" },
+        pv: { v: L("absent · requis", "missing · required"), s: "is-conflict" },
+        lever: { v: L("voté, montant inconnu", "voted, amount unknown"), s: "is-conflict" },
+        status: { v: L("en attente d'arbitrage", "waiting for arbitration"), s: "is-wait" }
+      },
+      changed: ["status"],
+      tone: "amber",
+      wire: [
+        {
+          dir: "alert",
+          label: L("iris → agent immobilier · status-update", "iris → estate agent · status-update"),
+          code: L(
+`{
+  "kind": "status-update", "taskId": "task-9d02", "final": true,
+  "status": {
+    "state": "input-required",
+    "message": { "role": "agent", "parts": [{ "kind": "text",
+      "text": "Deux points avant d'aller plus loin.
+
+               1. La surface : 71 m2 dans l'annonce, 68,4 m2 au Carrez.
+                  Le Carrez fait foi, mais c'est toi qui tranches.
+
+               2. Le PV d'AG 2023 manque, et les charges 2024 citent un
+                  ravalement vote. Le syndic (Cabinet Durand) l'a.
+                  Je peux le lui demander - tu veux que je le fasse ?" }]}
+  }
+}`,
+`{
+  "kind": "status-update", "taskId": "task-9d02", "final": true,
+  "status": {
+    "state": "input-required",
+    "message": { "role": "agent", "parts": [{ "kind": "text",
+      "text": "Two things before I go further.
+
+               1. Floor area: 71 sqm in the listing, 68.4 sqm on the
+                  Carrez survey. Carrez prevails, but you decide.
+
+               2. The 2023 AGM minutes are missing, and the 2024 charges
+                  cite voted facade works. The managing agent (Cabinet
+                  Durand) has them. Shall I ask for them?" }]}
+  }
+}`)
+        }
+      ],
+      note: L("<b>Aucun agent ne tranche seul.</b> La règle est écrite dans le moteur — <code>resolution: \"human\"</code> — parce que c'est une décision produit, pas une limite technique : quand deux documents se contredisent, c'est le professionnel qui engage sa responsabilité.",
+              "<b>No agent decides alone.</b> The rule is written into the engine — <code>resolution: \"human\"</code> — because it is a product decision, not a technical limit: when two documents disagree, the professional carries the liability.")
+    },
+
+    {
+      phase: L("Décision", "Decision"),
+      title: L("L'humain tranche et autorise", "The human decides and authorises"),
+      proto: {
+        kinds: ["a2a"],
+        why: L("La réponse arrive sur la <b>même tâche</b>, ouverte depuis tout à l'heure. En MCP, l'appel serait mort depuis longtemps et il faudrait tout relancer depuis zéro.",
+               "The answer lands on the <b>same task</b>, open since earlier. In MCP the call would be long dead and everything would have to start over.")
+      },
+      gloss: L("Deux secondes de la part de l'agent immobilier, et le dossier se débloque. La surface est arbitrée sur-le-champ, la demande au syndic est autorisée — et cette autorisation est enregistrée dans la tâche.",
+               "Two seconds from the estate agent and the file unblocks. The floor area is settled on the spot, the request is approved — and that approval is recorded in the task."),
+      hops: [{ from: "human", to: "iris" }],
+      nodes: { human: "active", iris: "active", dossier: "active" },
+      dossier: {
+        surface: { v: L("68,4 m² · Carrez", "68.4 m² · Carrez"), s: "is-ok" },
+        pv: { v: L("demande autorisée", "request approved"), s: "is-wait" },
+        lever: { v: L("voté, montant inconnu", "voted, amount unknown"), s: "is-conflict" },
+        status: { v: L("1 point en attente", "1 point pending"), s: "is-wait" }
+      },
+      changed: ["surface", "pv", "status"],
+      wire: [
+        {
+          dir: "out",
+          label: L("agent immobilier → iris · message/send", "estate agent → iris · message/send"),
+          code: L(
+`{
+  "jsonrpc": "2.0", "id": 4, "method": "message/send",
+  "params": { "message": {
+    "role": "user",
+    "taskId": "task-9d02",        // meme tache, rien n'est rejoue
+    "contextId": "ctx-4e77",
+    "parts": [{ "kind": "text",
+      "text": "Le Carrez fait foi. Et oui, demande le PV au syndic." }],
+    "metadata": {
+      "arbitration": { "field": "surface_m2", "chosen": "carrez",
+                       "value": 68.4, "by": "user" },
+      "authorised_actions": ["send_email:syndic"]
+    }
+  }}
+}`,
+`{
+  "jsonrpc": "2.0", "id": 4, "method": "message/send",
+  "params": { "message": {
+    "role": "user",
+    "taskId": "task-9d02",        // same task, nothing is replayed
+    "contextId": "ctx-4e77",
+    "parts": [{ "kind": "text",
+      "text": "Carrez prevails. And yes, ask the managing agent." }],
+    "metadata": {
+      "arbitration": { "field": "surface_m2", "chosen": "carrez",
+                       "value": 68.4, "by": "user" },
+      "authorised_actions": ["send_email:syndic"]
+    }
+  }}
+}`)
+        }
+      ]
+    },
+
+    {
+      phase: L("Sortie · Arsène", "Outbound · Arsène"),
+      title: L("Arsène écrit au syndic", "Arsène writes to the managing agent"),
+      proto: {
+        kinds: ["a2a", "mail"],
+        why: L("Iris <b>délègue</b> à Arsène en A2A, parce qu'Arsène va attendre des jours — un outil MCP ne peut pas rester ouvert aussi longtemps. Le mail lui-même n'est ni A2A ni MCP : au bout, il y a un humain avec une boîte de réception.",
+               "Iris <b>delegates</b> to Arsène over A2A, because Arsène is going to wait for days — an MCP call cannot stay open that long. The email itself is neither A2A nor MCP: at the other end there is a person with an inbox.")
+      },
+      gloss: L("Arsène rédige la demande, l'adresse au contact extrait du relevé de charges, et met l'agent immobilier en copie. Puis la tâche se met en veille. Elle ne s'arrête pas : elle attend.",
+               "Arsène drafts the request, addresses it to the contact pulled from the charges statement, and copies in the estate agent. Then the task goes dormant. It does not stop: it waits."),
+      hops: [{ from: "iris", to: "arsene" }, { from: "arsene", to: "syndic" }],
+      nodes: { iris: "active", arsene: "working", syndic: "waiting", dossier: "active" },
+      dossier: {
+        surface: { v: L("68,4 m² · Carrez", "68.4 m² · Carrez"), s: "is-ok" },
+        pv: { v: L("demandé au syndic", "requested"), s: "is-wait" },
+        lever: { v: L("voté, montant inconnu", "voted, amount unknown"), s: "is-conflict" },
+        status: { v: L("en attente externe", "waiting on a third party"), s: "is-wait" }
+      },
+      changed: ["pv", "status"],
+      tone: "amber",
+      wire: [
+        {
+          dir: "out",
+          label: L("iris → arsène · message/send (délégation)", "iris → arsène · message/send (delegation)"),
+          code: L(
+`{
+  "jsonrpc": "2.0", "id": 5, "method": "message/send",
+  "params": { "message": {
+    "role": "user", "taskId": "task-9d02",
+    "parts": [
+      { "kind": "text", "text": "skill: relance-interlocuteur" },
+      { "kind": "data", "data": {
+        "recipient": { "role": "syndic", "name": "Cabinet Durand" },
+        "contact_source": "releve-charges-2024.pdf p.1",
+        "document_requested": "pv_ag_2023",
+        "cc_user": true,              // transparence : l'agent est en copie
+        "authorised_by": "user"       // sans ce champ, Arsene n'envoie pas
+      }}
+    ]
+  }}
+}`,
+`{
+  "jsonrpc": "2.0", "id": 5, "method": "message/send",
+  "params": { "message": {
+    "role": "user", "taskId": "task-9d02",
+    "parts": [
+      { "kind": "text", "text": "skill: relance-interlocuteur" },
+      { "kind": "data", "data": {
+        "recipient": { "role": "syndic", "name": "Cabinet Durand" },
+        "contact_source": "releve-charges-2024.pdf p.1",
+        "document_requested": "pv_ag_2023",
+        "cc_user": true,              // transparency: the agent is copied
+        "authorised_by": "user"       // without this, Arsene does not send
+      }}
+    ]
+  }}
+}`)
+        },
+        {
+          dir: "mail",
+          label: L("arsène → syndic · email (SMTP)", "arsène → managing agent · email (SMTP)"),
+          code: L(
+`To:  contact@syndic.example
+Cc:  agent@agence.example
+Subj: Lot 4B - 12 rue Marcadet - PV d'AG 2023
+
+Bonjour,
+Dans le cadre de la vente du lot 4B, le releve de charges 2024
+mentionne un ravalement vote en assemblee generale 2023.
+Pourriez-vous nous transmettre le proces-verbal correspondant ?
+
+-- envoye par Blossom pour le compte de l'agence, qui est en copie`,
+`To:  contact@syndic.example
+Cc:  agent@agence.example
+Subj: Unit 4B - 12 rue Marcadet - 2023 AGM minutes
+
+Hello,
+Regarding the sale of unit 4B, the 2024 service charge statement
+mentions facade works voted at the 2023 general meeting.
+Could you send us the corresponding minutes?
+
+-- sent by Blossom on behalf of the agency, which is in copy`)
+        }
+      ]
+    },
+
+    {
+      phase: L("Retour", "Return"),
+      when: L("+ 3 jours", "+ 3 days"),
+      title: L("La réponse rentre — et la boucle se referme", "The answer comes back — and the loop closes"),
+      proto: {
+        kinds: ["mail", "mcp"],
+        why: L("<b>Le moment le plus parlant de la page.</b> Un appel MCP tout bête — mais il porte un identifiant de tâche vieux de trois jours. MCP transporte, A2A se souvient. Les deux font exactement leur métier.",
+               "<b>The most telling moment on this page.</b> A perfectly ordinary MCP call — but it carries a task id that is three days old. MCP carries, A2A remembers. Each does exactly its job.")
+      },
+      gloss: L("Le syndic répond avec le PDF en pièce jointe. Arsène le reconnaît, le rattache à la tâche endormie et le renvoie dans le pipeline par la même porte que les douze premiers. <b>Rien n'est rejoué.</b>",
+               "The managing agent replies with the PDF attached. Arsène recognises it, ties it back to the dormant task and pushes it into the pipeline through the same door as the first twelve. <b>Nothing is replayed.</b>"),
+      hops: [{ from: "syndic", to: "arsene" }, { from: "arsene", to: "extract" }],
+      nodes: { syndic: "done", arsene: "working", extract: "working", dossier: "active" },
+      dossier: {
+        surface: { v: L("68,4 m² · Carrez", "68.4 m² · Carrez"), s: "is-ok" },
+        pv: { v: L("reçu · pv-ag-2023.pdf", "received · pv-ag-2023.pdf"), s: "is-ok" },
+        lever: { v: L("en cours de lecture", "being read"), s: "is-wait" },
+        status: { v: L("reprise du pipeline", "pipeline resumed"), s: "is-set" }
+      },
+      changed: ["pv", "lever", "status"],
+      wire: [
+        {
+          dir: "mail",
+          label: L("syndic → arsène · email entrant", "managing agent → arsène · inbound email"),
+          code: L(
+`From: contact@syndic.example
+Attn: pv-ag-2023.pdf  (1,8 Mo)
+
+Bonjour, veuillez trouver le PV demande. Cordialement.`,
+`From: contact@syndic.example
+Attn: pv-ag-2023.pdf  (1.8 MB)
+
+Hello, please find the requested minutes. Best regards.`)
+        },
+        {
+          dir: "out",
+          label: L("arsène → extract · appel d'outil", "arsène → extract · tool call"),
+          code: L(
+`{
+  "method": "tools/call",
+  "params": {
+    "name": "extraction_documents",
+    "arguments": { "files": ["pv-ag-2023.pdf"] },
+    "_meta": {
+      "a2a/taskId": "task-9d02",     // ouverte depuis 3 jours
+      "a2a/contextId": "ctx-4e77"
+    }
+  }
+}`,
+`{
+  "method": "tools/call",
+  "params": {
+    "name": "extraction_documents",
+    "arguments": { "files": ["pv-ag-2023.pdf"] },
+    "_meta": {
+      "a2a/taskId": "task-9d02",     // open for 3 days
+      "a2a/contextId": "ctx-4e77"
+    }
+  }
+}`)
+        }
+      ],
+      note: L("<b>Regarde les deux blocs ci-dessus.</b> L'appel est du MCP pur — même nom d'outil, mêmes arguments qu'à l'étape 2. Ce qui a changé, c'est ce qu'il transporte : un identifiant de tâche qui a survécu trois jours, un aller-retour chez un tiers et une décision humaine.",
+              "<b>Look at the two blocks above.</b> The call is pure MCP — same tool name, same arguments as in step 2. What changed is what it carries: a task id that survived three days, a round trip to a third party, and a human decision.")
+    },
+
+    {
+      phase: L("Convergence", "Convergence"),
+      title: L("Plus rien à résoudre", "Nothing left to resolve"),
+      proto: {
+        kinds: ["mcp", "a2a"],
+        why: L("Retour au régime normal : des appels d'outil qui répondent tout de suite. Le dernier message A2A est celui qui referme la tâche — <code>completed</code>, trois jours après son ouverture.",
+               "Back to normal: tool calls that answer at once. The final A2A message is the one that closes the task — <code>completed</code>, three days after it opened.")
+      },
+      gloss: L("Le PV nouvellement arrivé repasse par la confrontation. Le montant du ravalement apparaît, la quote-part du lot 4B se calcule, la dernière ligne rouge s'éteint.",
+               "The freshly arrived minutes go back through the cross-check. The amount of the works appears, unit 4B's share is computed, the last red line goes out."),
+      hops: [{ from: "extract", to: "dossier" }, { from: "dossier", to: "coherence" }],
+      nodes: { extract: "done", coherence: "done", dossier: "active", iris: "done", arsene: "done" },
+      dossier: {
+        surface: { v: L("68,4 m² · Carrez", "68.4 m² · Carrez"), s: "is-ok" },
+        pv: { v: L("analysé", "analysed"), s: "is-ok" },
+        lever: { v: L("12 400 € · lot 4B", "€12,400 · unit 4B"), s: "is-lever" },
+        status: { v: L("dossier complet", "file complete"), s: "is-ok" }
+      },
+      changed: ["lever", "pv", "status"],
+      wire: [
+        {
+          dir: "in",
+          label: L("cohérence → blossom · résultat (MCP)", "coherence → blossom · result (MCP)"),
+          code: L(
+`{
+  "structuredContent": {
+    "conflicts": [],
+    "missing": [],
+    "resolved": [
+      { "field": "surface_m2", "value": 68.4, "source": "carrez",
+        "arbitrated_by": "user" }   // tracable : qui a decide, et quand
+    ],
+    "negotiation_levers": [
+      { "type": "travaux_votes", "amount_eur": 12400,
+        "label": "Ravalement vote en AG 2023, quote-part lot 4B",
+        "source": "pv-ag-2023.pdf p.4",
+        "obtained_via": "arsene/relance-interlocuteur" }
+    ]
+  }
+}`,
+`{
+  "structuredContent": {
+    "conflicts": [],
+    "missing": [],
+    "resolved": [
+      { "field": "surface_m2", "value": 68.4, "source": "carrez",
+        "arbitrated_by": "user" }   // traceable: who decided, and when
+    ],
+    "negotiation_levers": [
+      { "type": "travaux_votes", "amount_eur": 12400,
+        "label": "Facade works voted at the 2023 AGM, unit 4B share",
+        "source": "pv-ag-2023.pdf p.4",
+        "obtained_via": "arsene/relance-interlocuteur" }
+    ]
+  }
+}`)
+        },
+        {
+          dir: "in",
+          label: L("blossom → agent immobilier · fin de tâche (A2A)", "blossom → estate agent · task closed (A2A)"),
+          code: L(
+`{
+  "kind": "status-update",
+  "taskId": "task-9d02",
+  "status": { "state": "completed" },
+  "final": true              // tache ouverte depuis 3 jours
+}`,
+`{
+  "kind": "status-update",
+  "taskId": "task-9d02",
+  "status": { "state": "completed" },
+  "final": true              // task open for 3 days
+}`)
+        }
+      ],
+      result: {
+        headline: L("Dossier complet", "File complete"),
+        meta: L("3 jours · 1 arbitrage · 1 document obtenu · 1 levier",
+                "3 days · 1 arbitration · 1 document obtained · 1 lever"),
+        alerts: [
+          {
+            sev: "ok",
+            tag: L("Arbitré", "Arbitrated"),
+            label: L("Surface retenue : 68,4 m² (Carrez) — choisie par l'agent immobilier, pas par une IA",
+                     "Floor area retained: 68.4 m² (Carrez) — chosen by the estate agent, not by an AI"),
+            src: L("arbitrage utilisateur · tracé dans la tâche", "user arbitration · recorded in the task")
+          },
+          {
+            sev: "ok",
+            tag: L("Obtenu", "Obtained"),
+            label: L("PV d'AG 2023 — demandé au syndic, reçu en 3 jours, réinjecté tout seul",
+                     "2023 AGM minutes — requested, received in 3 days, re-injected automatically"),
+            src: "arsène · relance-interlocuteur"
+          },
+          {
+            sev: "lever",
+            tag: L("Levier de négociation", "Negotiation lever"),
+            label: L("Ravalement voté en AG 2023 — quote-part du lot 4B : 12 400 €",
+                     "Facade works voted at the 2023 AGM — unit 4B's share: €12,400"),
+            src: "pv-ag-2023.pdf p.4"
+          }
+        ]
+      },
+      note: L("<b>Cinq appels MCP, deux échanges A2A, un email.</b> Le levier à 12 400 € n'existait dans aucun document déposé au départ — il a fallu qu'un agent remarque son absence, qu'un humain autorise, et que la tâche survive trois jours. C'est précisément ce qu'A2A apporte, et rien de plus.",
+              "<b>Five MCP calls, two A2A exchanges, one email.</b> The €12,400 lever existed in none of the documents dropped in at the start — it took one agent to notice it was missing, a human to approve, and a task that survived three days. That is exactly what A2A brings, and nothing more.")
+    }
+  ];
+
+  /* ================= wiring ================= */
+
+  const EDGES = {
+    "karl|dossier":      { id: "e-karl-dossier",      a: "karl",      b: "dossier" },
+    "extract|dossier":   { id: "e-extract-dossier",   a: "extract",   b: "dossier" },
+    "dossier|coherence": { id: "e-dossier-coherence", a: "dossier",   b: "coherence" },
+    "coherence|iris":    { id: "e-coherence-iris",    a: "coherence", b: "iris" },
+    "iris|human":        { id: "e-iris-human",        a: "iris",      b: "human" },
+    "iris|arsene":       { id: "e-iris-arsene",       a: "iris",      b: "arsene" },
+    "arsene|syndic":     { id: "e-arsene-syndic",     a: "arsene",    b: "syndic" },
+    "arsene|extract":    { id: "e-arsene-extract",    a: "arsene",    b: "extract" }
+  };
+  function edgeFor(from, to) { return EDGES[from + "|" + to] || EDGES[to + "|" + from]; }
+
+  const DROWS = { surface: "d-surface", pv: "d-pv", lever: "d-lever", status: "d-status" };
+
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const el = {
+    rail: document.getElementById("rail"),
+    play: document.getElementById("btn-play"),
+    prev: document.getElementById("btn-prev"),
+    next: document.getElementById("btn-next"),
+    reset: document.getElementById("btn-reset"),
+    counter: document.getElementById("counter"),
+    num: document.getElementById("i-num"),
+    phase: document.getElementById("i-phase"),
+    when: document.getElementById("i-when"),
+    title: document.getElementById("i-title"),
+    badges: document.getElementById("i-badges"),
+    why: document.getElementById("i-why"),
+    gloss: document.getElementById("i-gloss"),
+    wire: document.getElementById("i-wire"),
+    extra: document.getElementById("i-extra"),
+    pulses: document.getElementById("pulse-layer")
+  };
+
+  let lang = (navigator.language || "en").toLowerCase().indexOf("fr") === 0 ? "fr" : "en";
+  let index = 0;
+  let playing = false;
+  let dwellTimer = null;
+  let rafId = null;
+
+  function t(v) { return v == null ? "" : (typeof v === "string" ? v : v[lang]); }
+
+  /* ---------- code rendering ---------- */
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  const TOKEN = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?)|(\/\/[^\n]*)/g;
+
+  function highlight(code) {
+    return escapeHtml(code).replace(TOKEN, function (m, str, colon, lit, num, com) {
+      if (com) return '<span class="tk-com">' + com + "</span>";
+      if (str) return colon
+        ? '<span class="tk-key">' + str + "</span>" + colon
+        : '<span class="tk-str">' + str + "</span>";
+      if (lit) return '<span class="tk-num">' + lit + "</span>";
+      if (num) return '<span class="tk-num">' + num + "</span>";
+      return m;
+    });
+  }
+
+  const ARROWS = { out: "→", in: "←", alert: "⚠", mail: "✉" };
+
+  function renderWire(frames) {
+    el.wire.innerHTML = frames.map(function (f) {
+      return '<div class="frame ' + f.dir + '">' +
+        '<div class="frame-label"><span class="arrow">' + ARROWS[f.dir] + "</span>" +
+        escapeHtml(t(f.label)) + "</div>" +
+        '<pre class="code"><code>' + highlight(t(f.code)) + "</code></pre></div>";
+    }).join("");
+  }
+
+  function renderProto(proto) {
+    if (!proto) { el.badges.innerHTML = ""; el.why.innerHTML = ""; return; }
+    el.badges.innerHTML = proto.kinds.map(function (k) {
+      return '<span class="pbadge ' + k + '">' + escapeHtml(t(PROTO_LABEL[k])) + "</span>";
+    }).join("");
+    el.why.innerHTML = t(proto.why);
+  }
+
+  function renderExtra(step) {
+    let html = "";
+    if (step.result) {
+      html += '<div class="result"><div class="result-top"><strong>' +
+        escapeHtml(t(step.result.headline)) + "</strong><span>" +
+        escapeHtml(t(step.result.meta)) + "</span></div>";
+      html += step.result.alerts.map(function (a) {
+        return '<div class="alert-row"><i class="sev ' + a.sev + '"></i>' +
+          '<span class="alert-body"><span class="tag">' + escapeHtml(t(a.tag)) + "</span>" +
+          "<b>" + escapeHtml(t(a.label)) + "</b>" +
+          "<small>" + escapeHtml(t(a.src)) + "</small></span></div>";
+      }).join("");
+      html += "</div>";
+    }
+    if (step.note) html += '<p class="note">' + t(step.note) + "</p>";
+    el.extra.innerHTML = html;
+    el.extra.style.marginTop = html ? "2px" : "0";
+  }
+
+  /* ---------- graph ---------- */
+
+  function clearGraph() {
+    document.querySelectorAll(".edge").forEach(function (e) { e.classList.remove("lit", "lit-amber"); });
+    document.querySelectorAll(".node, #n-dossier").forEach(function (n) {
+      n.classList.remove("is-active", "is-working", "is-waiting", "is-done");
+    });
+    document.querySelectorAll(".drow").forEach(function (r) { r.classList.remove("changed"); });
+    el.pulses.innerHTML = "";
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  function paintNodes(map) {
+    Object.keys(map).forEach(function (id) {
+      const node = document.getElementById("n-" + id);
+      if (node) node.classList.add("is-" + map[id]);
+    });
+  }
+
+  function paintDossier(state, changed) {
+    if (!state) return;
+    Object.keys(DROWS).forEach(function (key) {
+      const row = document.getElementById(DROWS[key]);
+      if (!row || !state[key]) return;
+      row.classList.remove("is-set", "is-conflict", "is-wait", "is-ok", "is-lever");
+      if (state[key].s) row.classList.add(state[key].s);
+      const val = row.querySelector(".dval");
+      if (val) val.textContent = t(state[key].v);
+    });
+    if (reduced || !changed) return;
+    requestAnimationFrame(function () {
+      changed.forEach(function (key) {
+        const row = document.getElementById(DROWS[key]);
+        if (row) row.classList.add("changed");
+      });
+    });
+  }
+
+  function runHops(step, done) {
+    const hops = step.hops || [];
+    const cls = step.tone === "amber" ? "lit-amber" : "lit";
+    const amber = step.tone === "amber";
+
+    if (reduced) {
+      hops.forEach(function (h) {
+        const e = edgeFor(h.from, h.to);
+        if (e) document.getElementById(e.id).classList.add(cls);
+      });
+      if (done) done();
+      return;
+    }
+
+    let i = 0;
+    function nextHop() {
+      if (i >= hops.length) { if (done) done(); return; }
+      const hop = hops[i++];
+      const edge = edgeFor(hop.from, hop.to);
+      if (!edge) { nextHop(); return; }
+
+      const path = document.getElementById(edge.id);
+      path.classList.add(cls);
+
+      const total = path.getTotalLength();
+      const forward = edge.a === hop.from;
+
+      const halo = document.createElementNS(SVG_NS, "circle");
+      halo.setAttribute("r", "9");
+      halo.setAttribute("class", "pulse-halo" + (amber ? " amber" : ""));
+      const dot = document.createElementNS(SVG_NS, "circle");
+      dot.setAttribute("r", "4.5");
+      dot.setAttribute("class", "pulse" + (amber ? " amber" : ""));
+      el.pulses.appendChild(halo);
+      el.pulses.appendChild(dot);
+
+      const duration = 820;
+      const start = performance.now();
+
+      function frame(now) {
+        const p0 = Math.min(1, (now - start) / duration);
+        const eased = p0 < 0.5 ? 2 * p0 * p0 : 1 - Math.pow(-2 * p0 + 2, 2) / 2;
+        const at = forward ? eased * total : (1 - eased) * total;
+        const pt = path.getPointAtLength(at);
+        dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y);
+        halo.setAttribute("cx", pt.x); halo.setAttribute("cy", pt.y);
+        halo.setAttribute("r", String(9 + 3 * Math.sin(p0 * Math.PI)));
+        if (p0 < 1) { rafId = requestAnimationFrame(frame); }
+        else { dot.remove(); halo.remove(); nextHop(); }
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+    nextHop();
+  }
+
+  /* ---------- driving ---------- */
+
+  function pad(n) { return String(n).padStart(2, "0"); }
+
+  function render(i, autoAdvance) {
+    index = i;
+    const step = STEPS[i];
+
+    clearGraph();
+    paintNodes(step.nodes || {});
+    paintDossier(step.dossier, step.changed);
+
+    el.num.textContent = pad(i + 1);
+    el.phase.textContent = t(step.phase);
+    if (step.when) { el.when.textContent = t(step.when); el.when.hidden = false; }
+    else { el.when.hidden = true; }
+    el.title.textContent = t(step.title);
+    renderProto(step.proto);
+    el.gloss.innerHTML = t(step.gloss);
+    renderWire(step.wire);
+    renderExtra(step);
+    el.counter.textContent = pad(i + 1) + " / " + pad(STEPS.length);
+
+    Array.prototype.forEach.call(el.rail.children, function (seg, k) {
+      seg.classList.toggle("current", k === i);
+      seg.classList.toggle("done", k < i);
+      seg.setAttribute("aria-selected", k === i ? "true" : "false");
+    });
+
+    el.prev.disabled = i === 0;
+    el.next.disabled = i === STEPS.length - 1;
+
+    runHops(step, function () {
+      if (autoAdvance && playing) {
+        dwellTimer = setTimeout(function () {
+          if (!playing) return;
+          if (index < STEPS.length - 1) render(index + 1, true);
+          else setPlaying(false);
+        }, (step.note || step.result) ? 6000 : 4400);
+      }
+    });
+  }
+
+  function stopTimers() { if (dwellTimer) { clearTimeout(dwellTimer); dwellTimer = null; } }
+
+  function setPlaying(on) {
+    playing = on;
+    el.play.textContent = on ? t(UI.pause) : t(UI.play);
+    if (!on) { stopTimers(); return; }
+    if (index === STEPS.length - 1) { render(0, true); return; }
+    stopTimers();
+    dwellTimer = setTimeout(function () {
+      if (playing && index < STEPS.length - 1) render(index + 1, true);
+    }, 900);
+  }
+
+  function goTo(i) {
+    stopTimers();
+    playing = false;
+    el.play.textContent = t(UI.play);
+    render(Math.max(0, Math.min(STEPS.length - 1, i)), false);
+  }
+
+  /* ---------- language ---------- */
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+
+    document.querySelectorAll("[data-i18n]").forEach(function (node) {
+      const key = node.getAttribute("data-i18n");
+      if (UI[key]) node.textContent = t(UI[key]);
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach(function (node) {
+      const key = node.getAttribute("data-i18n-html");
+      if (UI[key]) node.innerHTML = t(UI[key]);
+    });
+
+    el.play.textContent = playing ? t(UI.pause) : t(UI.play);
+    el.reset.textContent = t(UI.reset);
+    el.play.setAttribute("aria-label", t(UI.playAria));
+    el.prev.setAttribute("aria-label", t(UI.prevAria));
+    el.next.setAttribute("aria-label", t(UI.nextAria));
+    el.reset.setAttribute("aria-label", t(UI.resetAria));
+    el.rail.setAttribute("aria-label", t(UI.railAria));
+
+    Array.prototype.forEach.call(el.rail.children, function (seg, k) {
+      seg.setAttribute("aria-label", t(UI.stepAria) + " " + (k + 1) + " — " + t(STEPS[k].phase));
+      seg.title = (k + 1) + ". " + t(STEPS[k].phase);
+    });
+
+    document.querySelectorAll(".lang-btn").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-lang") === lang ? "true" : "false");
+    });
+  }
+
+  function setLang(next) {
+    if (next === lang) return;
+    lang = next;
+    applyLang();
+    const wasPlaying = playing;
+    stopTimers();
+    playing = false;
+    render(index, false);
+    if (wasPlaying) setPlaying(true);
+  }
+
+  /* ---------- boot ---------- */
+
+  STEPS.forEach(function (s, k) {
+    const b = document.createElement("button");
+    b.className = "seg";
+    b.type = "button";
+    b.setAttribute("role", "tab");
+    b.addEventListener("click", function () { goTo(k); });
+    el.rail.appendChild(b);
+  });
+
+  el.play.addEventListener("click", function () { setPlaying(!playing); });
+  el.prev.addEventListener("click", function () { goTo(index - 1); });
+  el.next.addEventListener("click", function () { goTo(index + 1); });
+  el.reset.addEventListener("click", function () { goTo(0); });
+  document.querySelectorAll(".lang-btn").forEach(function (b) {
+    b.addEventListener("click", function () { setLang(b.getAttribute("data-lang")); });
+  });
+
+  document.addEventListener("keydown", function (ev) {
+    if (ev.target && /^(INPUT|TEXTAREA)$/.test(ev.target.tagName)) return;
+    if (ev.key === "ArrowRight") goTo(index + 1);
+    else if (ev.key === "ArrowLeft") goTo(index - 1);
+    else if (ev.key === " ") { ev.preventDefault(); setPlaying(!playing); }
+  });
+
+  applyLang();
+  render(0, false);
+  if (!reduced) setTimeout(function () { setPlaying(true); }, 1400);
+})();
+</script>
+
+</body>
+</html>
