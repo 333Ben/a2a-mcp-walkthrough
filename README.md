@@ -107,4 +107,4 @@ One file, no build, no dependencies, no network calls. Keyboard: `←` `→` to 
 
 ---
 
-© 2026 Garance Husson
+© 2026 Garance Husson. All rights reserved.

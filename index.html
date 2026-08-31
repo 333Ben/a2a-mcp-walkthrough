@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Huit echanges dans un systeme multi-agents, et le protocole de chacun : cinq appels MCP, deux echanges A2A, un email. Ou A2A gagne sa place, et ou il n'apporte rien.">
+<meta name="description" content="Eight exchanges in a multi-agent system, and the protocol each one actually needs: five MCP tool calls, two A2A exchanges, one email. Where A2A earns its place, and where it brings nothing.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="article">
-<meta property="og:title" content="A2A la ou il faut. MCP ailleurs.">
-<meta property="og:description" content="Huit echanges dans un systeme multi-agents, et le protocole de chacun : cinq appels MCP, deux echanges A2A, un email. Ou A2A gagne sa place, et ou il n'apporte rien.">
+<meta property="og:title" content="A2A where it earns it. MCP everywhere else.">
+<meta property="og:description" content="Eight exchanges in a multi-agent system, and the protocol each one actually needs: five MCP tool calls, two A2A exchanges, one email. Where A2A earns its place, and where it brings nothing.">
 <style>
   /* reset minimal — la feuille de la page suit et prime */
   :root { color-scheme: light dark; }
@@ -16,7 +16,7 @@
   [hidden] { display: none !important; }
 </style>
 
-<title>Blossom — Option C : A2A là où il faut, MCP ailleurs</title>
+<title>A2A where it earns it. MCP everywhere else.</title>
 
 <style>
   :root {
@@ -314,7 +314,7 @@
   <header class="masthead">
     <div class="masthead-top">
       <div class="eyebrow">
-        <span class="opt" data-i18n="option">Option C · le bon protocole au bon endroit</span><i class="sep"></i>
+        <span class="opt" data-i18n="option">Le bon protocole au bon endroit</span><i class="sep"></i>
         <span data-i18n="eyebrow2">Blossom · conformité Loi Alur</span>
         <span class="chip-sim" data-i18n="chip">Démo — scénario simulé</span>
       </div>
@@ -498,7 +498,8 @@
   /* ================= interface ================= */
 
   const UI = {
-    option: L("Option C · le bon protocole au bon endroit", "Option C · the right protocol in the right place"),
+    docTitle: L("A2A là où il faut. MCP ailleurs.", "A2A where it earns it. MCP everywhere else."),
+    option: L("Le bon protocole au bon endroit", "The right protocol in the right place"),
     eyebrow2: L("Blossom · conformité Loi Alur", "Blossom · Loi Alur compliance (France)"),
     chip: L("Démo — scénario simulé", "Demo — simulated scenario"),
     h1: L("A2A là où il faut. <em>MCP ailleurs.</em>", "A2A where it earns it. <em>MCP everywhere else.</em>"),
@@ -582,7 +583,7 @@
   "params": {
     "name": "extraction_annonce",
     "arguments": { "text": "Appartement 3 pieces, 71 m2, 3e etage,
-                            chauffage collectif, 12 rue Marcadet..." }
+                            chauffage collectif, 12 rue de l'Exemple..." }
   }
 }`,
 `{
@@ -590,7 +591,7 @@
   "params": {
     "name": "extraction_annonce",
     "arguments": { "text": "3-room flat, 71 sqm, 3rd floor,
-                            communal heating, 12 rue Marcadet..." }
+                            communal heating, 12 rue de l'Exemple..." }
   }
 }`)
         },
@@ -601,7 +602,7 @@
 `{
   "content": [{ "type": "text", "text": "..." }],
   "structuredContent": {
-    "address": "12 rue Marcadet, 75018 Paris",
+    "address": "12 rue de l'Exemple, 75018 Paris",
     "surface_m2": 71.0, "floor": 3, "rooms": 3,
     "heating": "collectif",
     "source": "annonce"   // declaratif : la source la moins fiable
@@ -610,7 +611,7 @@
 `{
   "content": [{ "type": "text", "text": "..." }],
   "structuredContent": {
-    "address": "12 rue Marcadet, 75018 Paris",
+    "address": "12 rue de l'Exemple, 75018 Paris",
     "surface_m2": 71.0, "floor": 3, "rooms": 3,
     "heating": "collectif",
     "source": "annonce"   // declarative: the least reliable source
@@ -949,7 +950,7 @@
           code: L(
 `To:  contact@syndic.example
 Cc:  agent@agence.example
-Subj: Lot 4B - 12 rue Marcadet - PV d'AG 2023
+Subj: Lot 4B - 12 rue de l'Exemple - PV d'AG 2023
 
 Bonjour,
 Dans le cadre de la vente du lot 4B, le releve de charges 2024
@@ -959,7 +960,7 @@ Pourriez-vous nous transmettre le proces-verbal correspondant ?
 -- envoye par Blossom pour le compte de l'agence, qui est en copie`,
 `To:  contact@syndic.example
 Cc:  agent@agence.example
-Subj: Unit 4B - 12 rue Marcadet - 2023 AGM minutes
+Subj: Unit 4B - 12 rue de l'Exemple - 2023 AGM minutes
 
 Hello,
 Regarding the sale of unit 4B, the 2024 service charge statement
@@ -1409,6 +1410,7 @@ Hello, please find the requested minutes. Best regards.`)
 
   function applyLang() {
     document.documentElement.lang = lang;
+    document.title = t(UI.docTitle);
 
     document.querySelectorAll("[data-i18n]").forEach(function (node) {
       const key = node.getAttribute("data-i18n");
