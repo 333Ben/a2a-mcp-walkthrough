@@ -13,6 +13,10 @@ This is the walkthrough of that exercise.
 
 **→ [Open it](https://333ben.github.io/a2a-mcp-walkthrough/)**
 
+**Implementation design (Blossom as Hybro design partner):**  
+[design-blossom-workflow.md](./design-blossom-workflow.md) — how Blossom completes this choreography with a self-hosted Hybro and domain tools.  
+Hybro-side headless Network API design lives in the Hybro repo: `backend/docs/design-headless-agent-network.md`.
+
 > 🇫🇷 La page est bilingue et suit la langue du navigateur. Un sélecteur FR/EN est en haut à droite.
 
 ---
